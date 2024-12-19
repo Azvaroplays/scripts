@@ -1,0 +1,292 @@
+local Hook;
+Hook = hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
+    local args = {...}
+    local namecallmethod =  getnamecallmethod()
+
+    if namecallmethod == "InvokeServer" then
+        if args[1] == "idklolbrah2de" then
+            return "  ___XP DE KEY"
+        end
+    end
+    
+    if (namecallmethod == "InvokeServer" or namecallmethod == "InvokeClient") and args[1] == "Reset" and args[3] ~= "DANK WAS HERE" then
+        return task.wait(9e9)
+    end
+    if namecallmethod == "FireServer" and args[1] == "Reset" and args[3] ~= "DANK WAS HERE" then
+        return task.wait(9e9)
+    end
+    return Hook(self, ...)
+end))
+
+local NewEvent = Instance.new("BindableEvent")
+NewEvent.Event:Connect(function()
+                
+local args = {
+    [1] = "Reset",
+    [2] = {
+        ["Anchored"] = false
+    },
+        [3] = "DANK WAS HERE"
+    }
+
+    game:GetService("Players").LocalPlayer.Character.RemoteEvent:FireServer(unpack(args))
+end)
+
+game:GetService("StarterGui"):SetCore("ResetButtonCallback", NewEvent)
+
+local LocalPlayer = game.Players.LocalPlayer
+
+local function endDialogue(NPC, Dialogue, Option)
+    local dialogueToEnd = {
+        ["NPC"] = NPC,
+        ["Dialogue"] = Dialogue,
+        ["Option"] = Option
+     }
+    LocalPlayer.Character:WaitForChild("RemoteEvent"):FireServer("EndDialogue", dialogueToEnd)
+    print("ENDED THE FOLLOWING DIALOGUE", NPC, Dialogue, Option)
+end
+
+local function WSDialogue()
+    endDialogue("Pucci", "Thugs", "Option1")
+    endDialogue("Pucci", "Alpha Thugs", "Option1")
+    endDialogue("Pucci", "Corrupt Police", "Option1")
+    endDialogue("Pucci", "Zombie Henchman", "Option1")
+    endDialogue("Pucci", "Vampire", "Option1")
+    endDialogue("Pucci", "Green Baby", "Option1")
+end
+local function MIHDialogue()
+    endDialogue("Green Baby", "Dialogue2", "Option1")
+    endDialogue("Pucci", "MIH12", "Option1")
+    endDialogue("Pucci", "MIH6", "Option1")
+    endDialogue("Path to Heaven", "Dialogue7", "Option1")
+    endDialogue("Heaven Ascension DEO Quest", "Dialogue5", "Option1")
+    endDialogue("Pucci", "MIH9", "Option1")
+end
+
+--kill function
+local function killNPC(npcName, playerDistance, dontDestroyOnKill, extraParameters)
+    print("DEBUG CHECK 1", npcName, playerDistance, dontDestroyOnKill, extraParameters)
+
+	local NPC = workspace.Living:WaitForChild(npcName,120)
+	local beingTargeted = true
+	local deadCheck
+
+    if not NPC then
+        print("let me kys")
+    end
+
+    local function getNPC() --allows calling functions to get current npc targeted 
+        return NPC
+    end
+
+    if extraParameters then
+        extraParameters(getNPC)
+    end
+
+    local function setStandMorphPosition()
+        if LocalPlayer.PlayerStats.Stand.Value == "None" then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = NPC.HumanoidRootPart.CFrame
+            return
+        end
+
+        if LocalPlayer.Character:FindFirstChild("SummonedStand").Value ~= true then
+            LocalPlayer.Character.RemoteFunction:InvokeServer("ToggleStand", "Toggle")
+            return
+        end
+        
+        if not LocalPlayer.Character.StandMorph or not LocalPlayer.Character or not LocalPlayer.Character.PrimaryPart then
+            task.wait(1)
+            return
+        end
+        
+        LocalPlayer.Character.StandMorph.PrimaryPart.CFrame = NPC.HumanoidRootPart.CFrame + NPC.HumanoidRootPart.CFrame.lookVector * -1.1
+        LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.StandMorph.PrimaryPart.CFrame + LocalPlayer.Character.StandMorph.PrimaryPart.CFrame.lookVector * math.random(-3,-2) - Vector3.new(0, playerDistance+5, 0)
+        
+        if not LocalPlayer.Character:FindFirstChild("FocusCam") then
+            local FocusCam = Instance.new("ObjectValue", LocalPlayer.Character)
+            FocusCam.Name = "FocusCam"
+            FocusCam.Value = LocalPlayer.Character.StandMorph.PrimaryPart
+        end
+        
+        if LocalPlayer.Character:FindFirstChild("FocusCam") and LocalPlayer.Character.FocusCam.Value ~= LocalPlayer.Character.StandMorph.PrimaryPart then
+            LocalPlayer.Character.FocusCam.Value = LocalPlayer.Character.StandMorph.PrimaryPart
+        end
+    end
+
+    local function HamonCharge()
+        if not LocalPlayer.Character:FindFirstChild("Hamon") then
+            return
+        end
+
+        if LocalPlayer.Character.Hamon.Value <= 0 then
+            LocalPlayer.Character.RemoteFunction    :InvokeServer("AssignSkillKey", {["Type"] = "Spec",["Key"] = "Enum.KeyCode.L",["Skill"] = "Hamon Charge"})
+            LocalPlayer.Character.RemoteEvent:FireServer("InputBegan", {["Input"] = Enum.KeyCode.L})
+        end
+    end
+
+    local function BlockBreaker()
+        if game:GetService("CollectionService"):HasTag(NPC, "Blocking") then
+            LocalPlayer.Character.RemoteEvent:FireServer("InputBegan", {["Input"] = Enum.KeyCode.R})
+        else
+            LocalPlayer.Character.RemoteFunction:InvokeServer("Attack", "m1")
+        end
+    end
+
+    deadCheck = LocalPlayer.PlayerGui.HUD.Main.DropMoney.Money.ChildAdded:Connect(function(child)
+        local number = tonumber(string.match(child.Name,"%d+"))
+            if number and NPC then
+                deadCheck:Disconnect()
+                beingTargeted = false
+
+                if not dontDestroyOnKill then
+                NPC:Destroy()
+            end
+        end
+    end)
+
+    while beingTargeted do
+        task.wait()
+
+        if not NPC:FindFirstChild("HumanoidRootPart") then
+            deadCheck:Disconnect()
+            beingTargeted = false
+            NPC:Destroy()
+            return true
+        end
+
+        task.spawn(HamonCharge)
+        task.spawn(setStandMorphPosition)
+        task.spawn(BlockBreaker)
+    end
+	return true
+end
+
+local function CMOONtoMIH()
+    local function autoBlock(getNPC)
+        local npc = getNPC()
+        npc.HumanoidRootPart.ChildAdded:Connect(function(part)
+            if part:IsA("Sound") then
+                if part.SoundId == "rbxassetid://6032844827" or part.SoundId == "rbxassetid://6572078317" then
+                    LocalPlayer.Character.RemoteEvent:FireServer("StartBlocking")
+                    task.wait(5)
+                    LocalPlayer.Character.RemoteEvent:FireServer("StopBlocking")
+                end
+            end
+        end)
+    end
+
+    MIHDialogue()
+
+    if not workspace.Living:WaitForChild("Heaven Ascension Dio", 60) then
+        print("ha")
+    end
+
+    if not LocalPlayer.Backpack:FindFirstChild("Dio's Bone") then
+        killNPC("Heaven Ascension Dio", 30, true, autoBlock)
+    end
+
+    if not workspace.Living:WaitForChild("Jotaro Kujo", 60) then
+        print("ha")
+    end
+
+    if not LocalPlayer.Backpack:FindFirstChild("Jotaro's Disc") and LocalPlayer.Backpack:FindFirstChild("Dio's Bone") then
+        killNPC("Jotaro Kujo", 30, true, autoBlock)
+    end
+    
+    if LocalPlayer.Backpack:FindFirstChild("Jotaro's Disc") and LocalPlayer.Backpack:FindFirstChild("Dio's Bone") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-215, 285, 321)
+        repeat
+            task.wait(1)
+            LocalPlayer.Character:WaitForChild("RemoteFunction"):InvokeServer("ToggleStand", "Toggle")
+        until LocalPlayer.PlayerStats.Stand.Value == "Made in Heaven"
+    end
+
+    CMOONtoMIH()
+end
+
+local function getDIOQuest()
+    local foundDioQuest = false
+    repeat task.wait(1)
+        WSDialogue()
+        for _,quests in pairs(LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:GetChildren()) do
+            if string.find(quests.Name, "(Dio's Plan)") then
+                foundDioQuest = true
+            end
+        end
+    until foundDioQuest
+end
+
+local function WStoCMOON()
+    if LocalPlayer.PlayerStats.Stand.Value == "Whitesnake" and getgenv().WSTOCMOON then
+        getDIOQuest()
+        if LocalPlayer.Backpack:FindFirstChild("Green Baby") then
+            local part = Instance.new("Part")
+            part.Anchored = true
+            part.Size = Vector3.new(5,1,5)
+            part.Parent = workspace
+            part.Position = Vector3.new(500, 2000, 500)
+            LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame
+            LocalPlayer.Character.RemoteFunction:InvokeServer("LearnSkill",{["Skill"] = "Worthiness V",["SkillTreeType"] = "Character"})
+            
+            local item = LocalPlayer.Backpack:FindFirstChild("Green Baby")
+            LocalPlayer.Character.Humanoid:EquipTool(item)
+
+            repeat item:Activate() task.wait() until LocalPlayer.PlayerGui:FindFirstChild("DialogueGui")
+            firesignal(LocalPlayer.PlayerGui:WaitForChild("DialogueGui").Frame.ClickContinue.MouseButton1Click)
+            firesignal(LocalPlayer.PlayerGui:WaitForChild("DialogueGui").Frame.Options:WaitForChild("Option1").TextButton.MouseButton1Click)
+            firesignal(LocalPlayer.PlayerGui:WaitForChild("DialogueGui").Frame.ClickContinue.MouseButton1Click)
+            
+            repeat task.wait() until LocalPlayer.PlayerStats.Stand.Value == "C-Moon"
+            WStoCMOON()
+        end
+
+        if LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:FindFirstChild("Defeat 30 Thugs (Dio's Plan)") then
+            print("THUG")
+            local KILLTHEMALL = killNPC("Thug", 15)
+            repeat task.wait()
+            until KILLTHEMALL
+            WStoCMOON()
+        end
+
+        if LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:FindFirstChild("Defeat 25 Alpha Thugs (Dio's Plan)") then
+            print("ALPHA THUG")
+            local KILLTHEMALL = killNPC("Alpha Thug", 15)
+            repeat task.wait()
+            until KILLTHEMALL
+            WStoCMOON()
+        end
+
+        if LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:FindFirstChild("Defeat 20 Corrupt Police (Dio's Plan)") then
+            print("CORRUPT POLICE")
+            local KILLTHEMALL = killNPC("Corrupt Police", 15)
+            repeat task.wait()
+            until KILLTHEMALL
+            WStoCMOON()
+        end
+
+        if LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:FindFirstChild("Defeat 15 Zombie Henchman (Dio's Plan)") then
+            print("ZOMBIE")
+            local KILLTHEMALL = killNPC("Zombie Henchman", 15)
+            repeat task.wait()
+            until KILLTHEMALL
+            WStoCMOON()
+        end
+
+        if LocalPlayer.PlayerGui.HUD.Main.Frames.Quest.Quests:FindFirstChild("Defeat 10 Vampires (Dio's Plan)") then
+            print("VAMPIRE")
+            local KILLTHEMALL = killNPC("Vampire", 15)
+            repeat task.wait()
+            until KILLTHEMALL
+            WStoCMOON()
+        end 
+    end
+    
+    if LocalPlayer.PlayerStats.Stand.Value == "C-Moon" and getgenv().WSTOCMOON then
+        CMOONtoMIH()
+    end
+end
+
+if LocalPlayer.Name == "TheWitheringExtra" or LocalPlayer.Name == "TheThrowawayExtra" then
+    WStoCMOON()
+    CMOONtoMIH()
+end
